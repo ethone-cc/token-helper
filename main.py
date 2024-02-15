@@ -1,17 +1,3 @@
-import os
-import re
-import json
-import base64
-import httpx
-import ctypes
-import sys
-import threading
-import pyclip
-import time
-from win32crypt import CryptUnprotectData
-from Crypto.Cipher import AES
-from flask import Flask, request, jsonify, render_template
-import webview
 from windowfix import setup_all_windows_borderless
 from typing import Dict, Optional, Union, List
 import httpx
@@ -24,11 +10,11 @@ import ctypes
 import sys
 import threading
 import webview
+import pyclip
+from flask import Flask, render_template, request, jsonify
+from win32crypt import CryptUnprotectData
 from Crypto.Cipher import AES
 from Crypto.Cipher._mode_gcm import GcmMode
-from Crypto.Util import Padding
-from flask import Flask, render_template, request, jsonify
-import pyclip
 
 
 class Discord:
