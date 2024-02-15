@@ -1,0 +1,356 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css">
+
+    <script>
+        function quit(copy = null) {
+            fetch(`http://127.0.0.1:3801/quit?copy=${copy}`);
+        }
+
+        async function fetchDiscordTokens() {
+            try {
+                const response = await fetch('http://127.0.0.1:3801/get_accounts');
+                const data = await response.json();
+                
+                console.log(data);
+                return data;
+            } catch (error) {
+                console.error(error);
+            }
+        }
+
+        async function init() {
+            console.log('init');
+            
+            const initWrapElement = document.getElementById('init');
+            const loadWrapElement = document.getElementById('load');
+
+            document.getElementById('init-button').disabled = true;
+            initWrapElement.classList.toggle("fade-out");
+            setTimeout(() => {
+                initWrapElement.style.display = "none";
+                loadWrapElement.style.display = "flex";
+                loadWrapElement.classList.toggle("fade-in");
+            }, 1000);
+
+            const result = await fetchDiscordTokens();
+            console.log(result);
+
+            loadWrapElement.style.height = "320px";
+
+            const titleElement = document.querySelector('.load-wrap .title');
+            const loaderElement = document.querySelector('.loader-wrap');
+
+            const tokenCount = Object.keys(result).length;
+            titleElement.innerHTML = "Found " + tokenCount + " Discord token";
+            if (tokenCount !== 1) {
+                titleElement.innerHTML += "s";
+            }
+            loaderElement.style.display = "none";
+
+            const descriptionElement = document.createElement('span');
+            descriptionElement.classList.add('description');
+            descriptionElement.innerHTML = "Click on an account below to copy the token to your clipboard & close the software.";
+            loadWrapElement.appendChild(descriptionElement);
+
+            const tokenWrapElement = document.createElement('div');
+            tokenWrapElement.classList.add('token-wrap');
+            loadWrapElement.appendChild(tokenWrapElement);
+
+            Object.entries(result).forEach(([key, value]) => {
+                const div = document.createElement('div');
+                div.classList.add('token-div');
+
+                if (value.avatar) {
+                    let avatarExt = ".png";
+                    if (value.avatar.startsWith("a_")) {
+                        avatarExt = ".gif";
+                    }
+                    avatar_url = `https://cdn.discordapp.com/avatars/${value.id}/${value.avatar}${avatarExt}`;
+                } else {
+                    avatar_url = "https://discord.com/assets/529459de1dc4c2424a03.png";
+                }
+
+                div.innerHTML = `
+                    <img src="${avatar_url}" alt="Avatar">
+                    <span>${value.global_name}</span>
+                `;
+                div.onclick = () => {
+                    quit(copy=value.token);
+                };
+
+                tokenWrapElement.appendChild(div);
+            });
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0e0e13;
+            color: #FAFAFA;
+            font-family: "Poppins", sans-serif;
+            border: 2px solid rgb(83 35 255); 
+            margin: 0;
+            border-radius: 9px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .fade-in {
+            animation: fade-in 1s ease-in-out forwards;
+        }
+
+        @keyframes fade-in {
+            0% {
+                display: none;
+                transform: translateY(-500px);
+            }
+            100% {
+                display: flex;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-out {
+            animation: fade-out 1s ease-in-out forwards;
+        }
+
+        @keyframes fade-out {
+            0% {
+                display: flex;
+                transform: translateY(0);
+            }
+            100% {
+                display: none;
+                transform: translateY(500px);
+            }
+        }
+
+        .close {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 30px;
+            height: 30px;
+            font-size: 1.4rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.1s ease-in-out;
+
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .close:hover {
+            background-color: rgba(95, 89, 116, 0.575);
+
+        }
+
+        .close i {
+            color: #737080;
+        }
+
+        .init-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 600px;
+            height: 350px;
+        }
+
+        .init-wrap .title {
+            font-size: 2rem;
+            color: #FAFAFA;
+            font-family: "Poppins", sans-serif;
+            font-weight: 700;
+            text-shadow: 3px 3px 10px 0 rgba(0, 0, 0, 0.384);
+        }
+
+        .init-wrap .description {
+            font-size: 1.1rem;
+            color: #cccccc;
+            font-family: "Poppins", sans-serif;
+            text-align: center;
+            text-shadow: 3px 3px 10px 0 rgba(0, 0, 0, 0.384);
+        }
+
+        .init-wrap button {
+            margin-top: 10px;
+            width: 100%;
+            padding: 14px;
+            background-color: rgb(83 35 255);
+            color: #FAFAFA;
+            border: none;
+            border-radius: 8px;
+            font-family: "Poppins", sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s ease-in-out;
+            box-shadow: 3px 3px 10px 0 rgba(0, 0, 0, 0.384);
+        }
+
+        .init-wrap button:hover {
+            background-color: rgb(83 35 255 / 85%);
+        }
+
+        .init-wrap button:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .load-wrap {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 600px;
+            height: 150px;
+            padding: 20px;
+            border-radius: 24px;
+            background-color: #1d1c24;
+            transition: 0.5s ease-in-out;
+            box-shadow: 3px 3px 10px 0 rgba(0, 0, 0, 0.384);
+        }
+
+        .load-wrap .title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #FAFAFA;
+            font-family: "Poppins", sans-serif;
+            text-align: center;
+            text-shadow: 3px 3px 10px 0 rgba(0, 0, 0, 0.384);
+        }
+
+        .load-wrap .description {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #cccccc;
+            font-family: "Poppins", sans-serif;
+            text-align: center;
+            margin: 0 70px;
+            text-shadow: 3px 3px 10px 0 rgba(0, 0, 0, 0.384);
+        }
+
+        .load-wrap .loader-wrap {
+            position: relative;
+            margin-top: 10px;
+            width: 80%;
+            height: 10px;
+            border-radius: 50px;
+            background-color: #0e0e13;
+            overflow: hidden;
+            box-shadow: 3px 3px 10px 0 rgba(0, 0, 0, 0.384);
+        }
+
+        .load-wrap .loader-wrap div {
+            position: absolute;
+            left: 0;
+            width: 150px;
+            height: 10px;
+            border-radius: 50px;
+            background-color: rgb(83 35 255);
+            animation: loader 2s infinite;
+            box-shadow: 3px 3px 10px 0 rgba(0, 0, 0, 0.384);
+        }
+
+        @keyframes loader {
+            0% {
+                left: 0%;
+                width: 150px;
+            }
+
+            50% {
+                left: 69%;
+                width: 150px;
+            }
+
+            100% {
+                left: 0%;
+                width: 150px;
+            }
+        }
+
+        .token-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: start;
+            width: 90%;
+            height: 170px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+            margin-top: 20px;
+            background-color: #0e0e13;
+            border-radius: 12px;
+            padding-bottom: 10px;
+            box-shadow: 3px 3px 10px 0 rgba(0, 0, 0, 0.384);
+        }
+
+        .token-wrap::-webkit-scrollbar {
+            display: none;
+        }
+
+        .token-div {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: start;
+            padding: 10px;
+            width: calc(100% - 40px);
+            margin-top: 10px;
+            border-radius: 8px;
+            background-color: #1d1c24;
+            cursor: pointer;
+            transition: 0.2s ease-in-out;
+            box-shadow: 3px 3px 10px 0 rgba(0, 0, 0, 0.384);
+        }
+
+        .token-div:hover {
+            opacity: 0.8;
+        }
+
+        .token-div img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            box-shadow: 3px 3px 10px 0 rgba(0, 0, 0, 0.384);
+        }
+
+        .token-div span {
+            font-size: 1.1rem;
+            color: #FAFAFA;
+            font-weight: 600;
+            font-family: "Poppins", sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="close" onclick="quit()">
+        <i class="fa-solid fa-xmark"></i>
+    </div>
+
+    <main>
+        <div class="init-wrap" id="init">
+            <span class="title">Ethone Token Helper</span>
+            <span class="description">Click the button below to search for Discord tokens on your system.</span>
+            <button onclick="init()" id="init-button">Start</button>
+        </div>
+
+        <div class="load-wrap" id="load">
+            <span class="title">Looking for Discord tokens...</span>
+            <div class="loader-wrap"><div></div></div>
+        </div>
+
+    </main>
+</body>
+</html>
